@@ -1,4 +1,4 @@
-from __future__ import annotations
+#from __future__ import annotations 
 
 from collections import UserDict
 from typing import List, Optional
@@ -189,7 +189,7 @@ if __name__ == "__main__":
 
     # Видалення запису Jane
     book.delete("Jane")
-    
+
     print("\nAfter deleting Jane:")
     for name, record in book.data.items():
         print(record)
