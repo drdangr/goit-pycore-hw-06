@@ -1,4 +1,4 @@
-#from __future__ import annotations 
+from __future__ import annotations # для підтримки типів, які визначені пізніше в коді
 
 from collections import UserDict
 from typing import List, Optional
