@@ -4,14 +4,14 @@ from collections import UserDict
 from typing import List, Optional
 
 
-# ===== БАЗОВІ ТИПИ ПОЛІВ =====================================================
+# БАЗОВІ ТИПИ ПОЛІВ 
 
 class Field:
     """
-    Базовий клас для полів запису (узагальнений контейнер для value).
+    Базовий клас для полів запису 
     """
     def __init__(self, value: str):
-        self.value = value  # у нащадків може бути валідація через property
+        self.value = value  # у нащадків буде валідація через property
 
     def __str__(self) -> str:
         return str(self.value)
@@ -23,7 +23,6 @@ class Field:
 class Name(Field):
     """
     Обов'язкове поле — ім'я контакту.
-    (Додаткової валідації тут не потрібно, але можна нормалізувати пробіли.)
     """
     def __init__(self, value: str):
         cleaned = value.strip()
@@ -35,7 +34,6 @@ class Name(Field):
 class Phone(Field):
     """
     Телефон з валідацією: рівно 10 цифр.
-    Дозволяємо на вхід сирий рядок, обробляємо/перевіряємо у сеттері.
     """
     def __init__(self, value: str):
         super().__init__(self._normalize_and_validate(value))
@@ -57,7 +55,7 @@ class Phone(Field):
         self._value = self._normalize_and_validate(v)
 
 
-# ===== ЗАПИС КОНТАКТУ ========================================================
+# ЗАПИС КОНТАКТУ 
 
 class Record:
     """
@@ -69,13 +67,12 @@ class Record:
         self.name = Name(name)
         self.phones: List[Phone] = []
 
-    # --- операції з телефонами ---
+    #  операції з телефонами 
 
     def add_phone(self, phone: str | Phone) -> None:
         """
         Додає телефон. Приймає або сирий рядок (10 цифр), або готовий Phone.
-        Дублікати не забороняємо за умовчанням (ТЗ не вимагає), але можна
-        легко додати перевірку у майбутньому.
+        Дублікати не забороняємо за умовчанням.
         """
         p = phone if isinstance(phone, Phone) else Phone(phone)
         self.phones.append(p)
@@ -105,7 +102,7 @@ class Record:
     def find_phone(self, phone_value: str) -> Optional[Phone]:
         """
         Повертає об'єкт Phone за значенням (10 цифр) або None, якщо не знайдено.
-        Приймає як «сирий» рядок (може містити нецифрові символи) — нормалізуємо.
+        Нормалізуємо.
         """
         try:
             normalized = Phone._normalize_and_validate(phone_value)
@@ -123,25 +120,25 @@ class Record:
         return f"Contact name: {self.name.value}, phones: {phones_str}"
 
 
-# ===== АДРЕСНА КНИГА =========================================================
+# АДРЕСНА КНИГА 
 
 class AddressBook(UserDict):
     """
     Колекція записів (Record), ключ — ІМ'Я (рядок). Спадкуємося від UserDict
-    для зручності, зберігаємо у self.data словник {name_str: Record}.
+    зберігаємо у self.data словник {name_str: Record}.
     """
 
     def add_record(self, record: Record) -> None:
         """
         Додає запис у книгу. Ключ — точне ім'я (як у record.name.value).
-        Якщо ім'я вже існує, перезаписує (можна змінити поведінку за потреби).
+        Якщо ім'я вже існує, перезаписує .
         """
         self.data[record.name.value] = record
 
     def find(self, name: str) -> Optional[Record]:
         """
-        Пошук запису за ІМ'ЯМ (точний збіг, регістр важливий як у прикладі ТЗ).
-        За потреби можна зробити case-insensitive варіант.
+        Пошук запису за ІМ'ЯМ (точний збіг, регістр важливий ).
+        Повертає Record або None, якщо не знайдено.
         """
         return self.data.get(name)
 
@@ -155,7 +152,7 @@ class AddressBook(UserDict):
         return False
 
 
-# ===== ДЕМО-СЦЕНАРІЙ З ТЗ ====================================================
+# ДЕМО-СЦЕНАРІЙ З ТЗ 
 if __name__ == "__main__":
    # Створення нової адресної книги
     book = AddressBook()
@@ -185,11 +182,13 @@ if __name__ == "__main__":
 
     # Пошук конкретного телефону у записі John
     found_phone = john.find_phone("5555555555")
-    print(f"{john.name}: {found_phone}")  # Виведення: 5555555555
+    print(found_phone)  # Виведення: 5555555555
+    #print(f"{john.name}: {found_phone}") # Виведення: Name object + Phone object не в ТЗ, але для перевірки
 
     # Видалення запису Jane
     book.delete("Jane")
 
+    # Виведення всіх записів після видалення Jane - нема в ТЗ, але для перевірки
     print("\nAfter deleting Jane:")
     for name, record in book.data.items():
         print(record)
