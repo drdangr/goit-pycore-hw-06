@@ -40,10 +40,14 @@ class Phone(Field):
 
     @staticmethod
     def _normalize_and_validate(raw: str) -> str:
-        s = "".join(ch for ch in raw if ch.isdigit())  # залишаємо тільки цифри
-        if len(s) != 10:
+        # Очищаємо від пробілів і дефісів (допустимі для форматування)
+        cleaned = raw.replace(" ", "").replace("-", "")
+        # Перевіряємо, що залишилися ЛИШЕ цифри (не витягуємо їх!)
+        if not cleaned.isdigit():
+            raise ValueError("Phone must contain only digits (spaces and hyphens allowed for formatting).")
+        if len(cleaned) != 10:
             raise ValueError("Phone must contain exactly 10 digits.")
-        return s
+        return cleaned
 
     @property
     def value(self) -> str:
@@ -102,14 +106,9 @@ class Record:
     def find_phone(self, phone_value: str) -> Optional[Phone]:
         """
         Повертає об'єкт Phone за значенням (10 цифр) або None, якщо не знайдено.
-        Нормалізуємо.
+        Викидає ValueError, якщо phone_value має невалідний формат.
         """
-        try:
-            normalized = Phone._normalize_and_validate(phone_value)
-        except ValueError:
-            # якщо вхід не 10 цифр — одразу None (шукати нема сенсу)
-            return None
-
+        normalized = Phone._normalize_and_validate(phone_value)
         for p in self.phones:
             if p.value == normalized:
                 return p
