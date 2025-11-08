@@ -7,41 +7,34 @@ from typing import List, Optional
 # БАЗОВІ ТИПИ ПОЛІВ 
 
 class Field:
-    """
-    Базовий клас для полів запису 
-    """
-    def __init__(self, value: str):
-        self.value = value  # у нащадків буде валідація через property
+    """Базовий клас для полів запису."""
+    def __init__(self, value):
+        self.value = value
 
-    def __str__(self) -> str:
+    def __str__(self):
         return str(self.value)
 
-    def __repr__(self) -> str:
+    def __repr__(self):
         return f"{self.__class__.__name__}({self.value!r})"
 
 
 class Name(Field):
-    """
-    Обов'язкове поле — ім'я контакту.
-    """
+    """Обов'язкове поле — ім'я контакту."""
     def __init__(self, value: str):
         cleaned = value.strip()
         if not cleaned:
             raise ValueError("Name cannot be empty.")
         super().__init__(cleaned)
 
-
 class Phone(Field):
-    """
-    Телефон з валідацією: рівно 10 цифр.
-    """
+    """Телефон з валідацією: рівно 10 цифр, без видалення символів."""
     def __init__(self, value: str):
-        super().__init__(self._normalize_and_validate(value))
+        super().__init__(self._validate(value))
 
     @staticmethod
-    def _normalize_and_validate(raw: str) -> str:
-        s = "".join(ch for ch in raw if ch.isdigit())  # залишаємо тільки цифри
-        if len(s) != 10:
+    def _validate(raw: str) -> str:
+        s = raw.strip()
+        if len(s) != 10 or not s.isdigit():
             raise ValueError("Phone must contain exactly 10 digits.")
         return s
 
@@ -51,8 +44,7 @@ class Phone(Field):
 
     @value.setter
     def value(self, v: str) -> None:
-        # setter викликається і з __init__, і при подальших змінах
-        self._value = self._normalize_and_validate(v)
+        self._value = self._validate(v)
 
 
 # ЗАПИС КОНТАКТУ 
@@ -69,13 +61,11 @@ class Record:
 
     #  операції з телефонами 
 
-    def add_phone(self, phone: str | Phone) -> None:
+    def add_phone(self, phone: str) -> None:
         """
-        Додає телефон. Приймає або сирий рядок (10 цифр), або готовий Phone.
-        Дублікати не забороняємо за умовчанням.
+        Додає новий телефон (рядок з 10 цифр) до списку телефонів.
         """
-        p = phone if isinstance(phone, Phone) else Phone(phone)
-        self.phones.append(p)
+        self.phones.append(Phone(phone))
 
     def remove_phone(self, phone_value: str) -> bool:
         """
@@ -104,11 +94,7 @@ class Record:
         Повертає об'єкт Phone за значенням (10 цифр) або None, якщо не знайдено.
         Нормалізуємо.
         """
-        try:
-            normalized = Phone._normalize_and_validate(phone_value)
-        except ValueError:
-            # якщо вхід не 10 цифр — одразу None (шукати нема сенсу)
-            return None
+        normalized = Phone._validate(phone_value)  # пусть тут поднимется ValueError
 
         for p in self.phones:
             if p.value == normalized:
@@ -130,7 +116,7 @@ class AddressBook(UserDict):
 
     def add_record(self, record: Record) -> None:
         """
-        Додає запис у книгу. Ключ — точне ім'я (як у record.name.value).
+        Додає запис у книгу. Ключ — точне ім'я 
         Якщо ім'я вже існує, перезаписує .
         """
         self.data[record.name.value] = record
